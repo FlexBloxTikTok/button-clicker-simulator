@@ -1,0 +1,1179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>💷 Button Simulator</title>
+
+<style>
+* {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+    font-family: Arial, sans-serif;
+    background: #071a0b;
+    color: white;
+}
+
+body {
+    user-select: none;
+}
+
+.app {
+    width: 100%;
+    height: 100dvh;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    background: linear-gradient(180deg, #071a0b, #0d2913);
+}
+
+header {
+    flex-shrink: 0;
+    padding: 14px 16px;
+    padding-top: max(14px, env(safe-area-inset-top));
+    background: #0b3514;
+    border-bottom: 1px solid #176b28;
+    text-align: center;
+}
+
+header h1 {
+    margin: 0;
+    font-size: clamp(20px, 6vw, 32px);
+}
+
+main {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 16px;
+    padding-bottom: calc(90px + env(safe-area-inset-bottom));
+}
+
+.page {
+    display: none;
+    width: 100%;
+    max-width: 800px;
+    margin: auto;
+}
+
+.page.active {
+    display: block;
+}
+
+.balance {
+    background: #0e4219;
+    border: 2px solid #1f8c36;
+    border-radius: 20px;
+    padding: 18px;
+    text-align: center;
+    margin-bottom: 18px;
+    box-shadow: 0 8px 30px rgba(0,0,0,.25);
+}
+
+.balance small {
+    opacity: .75;
+}
+
+.money {
+    font-size: clamp(30px, 9vw, 52px);
+    font-weight: bold;
+    color: #58ff76;
+    margin-top: 5px;
+    overflow-wrap: anywhere;
+}
+
+.click-area {
+    min-height: 50vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.click-button {
+    width: min(72vw, 52vh, 360px);
+    height: min(72vw, 52vh, 360px);
+    min-width: 180px;
+    min-height: 180px;
+    max-width: 360px;
+    max-height: 360px;
+    border-radius: 50%;
+    border: 8px solid #36d957;
+    background: radial-gradient(circle at 35% 30%, #49ff68, #15952d 65%, #08701c);
+    color: white;
+    font-size: clamp(28px, 8vw, 48px);
+    font-weight: bold;
+    box-shadow:
+        0 15px 0 #075c17,
+        0 20px 35px rgba(0,0,0,.35);
+    cursor: pointer;
+    touch-action: manipulation;
+    transition: transform .08s;
+}
+
+.click-button:active {
+    transform: translateY(8px) scale(.97);
+    box-shadow:
+        0 7px 0 #075c17,
+        0 12px 20px rgba(0,0,0,.3);
+}
+
+.per-click {
+    margin-top: 22px;
+    font-size: 18px;
+    color: #a8ffb6;
+}
+
+.card {
+    background: #0d3515;
+    border: 1px solid #1b702c;
+    border-radius: 18px;
+    padding: 18px;
+    margin-bottom: 14px;
+}
+
+.card h2,
+.card h3 {
+    margin-top: 0;
+}
+
+.upgrade {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    justify-content: space-between;
+    padding: 15px;
+    background: #0a2810;
+    border: 1px solid #1a6027;
+    border-radius: 15px;
+    margin: 10px 0;
+}
+
+.upgrade-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.upgrade-name {
+    font-weight: bold;
+    font-size: 17px;
+}
+
+.upgrade-desc {
+    font-size: 13px;
+    opacity: .7;
+    margin-top: 4px;
+}
+
+button {
+    font-family: inherit;
+}
+
+.buy,
+.rebirth-btn,
+.setting-btn,
+.reset-btn {
+    border: 0;
+    border-radius: 12px;
+    padding: 12px 15px;
+    font-weight: bold;
+    cursor: pointer;
+    color: white;
+    background: #15952d;
+}
+
+.buy:active,
+.rebirth-btn:active,
+.setting-btn:active,
+.reset-btn:active {
+    transform: scale(.96);
+}
+
+.buy:disabled,
+.rebirth-btn:disabled {
+    opacity: .4;
+    cursor: not-allowed;
+}
+
+.purchased {
+    background: #315c38 !important;
+}
+
+.locked {
+    opacity: .5;
+}
+
+.nav {
+    position: fixed;
+    z-index: 20;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    justify-content: space-around;
+    gap: 3px;
+    padding: 8px 6px;
+    padding-bottom: max(8px, env(safe-area-inset-bottom));
+    background: rgba(5, 25, 9, .97);
+    border-top: 1px solid #176b28;
+    backdrop-filter: blur(10px);
+}
+
+.nav button {
+    flex: 1;
+    min-width: 0;
+    padding: 10px 4px;
+    border: 0;
+    border-radius: 10px;
+    background: transparent;
+    color: #a9cfae;
+    font-size: clamp(11px, 3vw, 14px);
+    font-weight: bold;
+}
+
+.nav button.active {
+    background: #126a22;
+    color: white;
+}
+
+.stat {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 11px 0;
+    border-bottom: 1px solid #1a5224;
+}
+
+.stat:last-child {
+    border-bottom: 0;
+}
+
+.stat span:last-child {
+    text-align: right;
+    color: #65ff80;
+    font-weight: bold;
+    overflow-wrap: anywhere;
+}
+
+.owner {
+    margin-top: 20px;
+    padding: 15px;
+    border-radius: 14px;
+    background: #09240e;
+    border: 1px solid #166425;
+    color: #7dff92;
+    font-weight: bold;
+    text-align: center;
+    overflow-wrap: anywhere;
+}
+
+.rebirth-box {
+    text-align: center;
+    padding: 25px 15px;
+}
+
+.rebirth-level {
+    font-size: 28px;
+    font-weight: bold;
+    color: #72ff87;
+}
+
+.multiplier {
+    font-size: 42px;
+    font-weight: bold;
+    margin: 15px 0;
+}
+
+.requirement {
+    font-size: 18px;
+    margin-bottom: 20px;
+}
+
+.rebirth-btn {
+    font-size: 19px;
+    padding: 16px 25px;
+    background: #18a335;
+}
+
+.setting-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    padding: 15px 0;
+    border-bottom: 1px solid #1a5224;
+}
+
+.setting-row:last-child {
+    border-bottom: 0;
+}
+
+.toast {
+    position: fixed;
+    z-index: 50;
+    left: 50%;
+    bottom: 90px;
+    transform: translateX(-50%) translateY(20px);
+    background: #123d19;
+    border: 1px solid #2aa941;
+    color: white;
+    padding: 12px 18px;
+    border-radius: 12px;
+    opacity: 0;
+    pointer-events: none;
+    transition: .2s;
+    max-width: 90%;
+    text-align: center;
+}
+
+.toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+@media (orientation: landscape) and (max-height: 600px) {
+    main {
+        padding: 10px;
+    }
+
+    .click-area {
+        min-height: 70vh;
+    }
+
+    .click-button {
+        width: min(42vh, 280px);
+        height: min(42vh, 280px);
+    }
+
+    .balance {
+        padding: 10px;
+        margin-bottom: 8px;
+    }
+
+    .money {
+        font-size: 30px;
+    }
+}
+
+@media (max-width: 380px) {
+    main {
+        padding: 10px;
+    }
+
+    .upgrade {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .buy {
+        width: 100%;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+<header>
+    <h1>💷 Button Simulator</h1>
+</header>
+
+<main>
+
+<!-- HOME -->
+<section id="home" class="page active">
+
+    <div class="balance">
+        <small>YOUR MONEY</small>
+        <div id="money" class="money">£0</div>
+    </div>
+
+    <div class="click-area">
+        <button id="clickButton" class="click-button">
+            CLICK!
+        </button>
+
+        <div class="per-click">
+            +£<span id="perClick">1</span> per click
+        </div>
+    </div>
+
+</section>
+
+
+<!-- SHOP -->
+<section id="shop" class="page">
+
+    <div class="card">
+        <h2>🛒 Upgrade Shop</h2>
+        <p>Buy upgrades in order. Each upgrade can only be bought once.</p>
+        <div id="upgradeList"></div>
+    </div>
+
+</section>
+
+
+<!-- REBIRTH -->
+<section id="rebirth" class="page">
+
+    <div class="card rebirth-box">
+
+        <h2>♻️ Rebirth</h2>
+
+        <p>Reset your progress and gain a permanent money multiplier.</p>
+
+        <div class="rebirth-level">
+            Rebirth <span id="rebirthCount">0</span>
+        </div>
+
+        <div class="multiplier">
+            <span id="multiplier">1.0×</span>
+        </div>
+
+        <div class="requirement">
+            Next rebirth requires<br>
+            <strong id="rebirthRequirement">£10,000</strong>
+        </div>
+
+        <button id="rebirthButton" class="rebirth-btn">
+            ♻️ REBIRTH
+        </button>
+
+    </div>
+
+</section>
+
+
+<!-- STATS -->
+<section id="stats" class="page">
+
+    <div class="card">
+
+        <h2>📊 Stats</h2>
+
+        <div class="stat">
+            <span>Total Earned</span>
+            <span id="totalEarned">£0</span>
+        </div>
+
+        <div class="stat">
+            <span>Total Clicks</span>
+            <span id="totalClicks">0</span>
+        </div>
+
+        <div class="stat">
+            <span>Current Money</span>
+            <span id="statMoney">£0</span>
+        </div>
+
+        <div class="stat">
+            <span>Money Per Click</span>
+            <span id="statPerClick">£1</span>
+        </div>
+
+        <div class="stat">
+            <span>Highest Balance</span>
+            <span id="highestBalance">£0</span>
+        </div>
+
+        <div class="stat">
+            <span>Upgrades Bought</span>
+            <span id="upgradesBought">0 / 10</span>
+        </div>
+
+        <div class="stat">
+            <span>Rebirths</span>
+            <span id="statRebirths">0</span>
+        </div>
+
+        <div class="stat">
+            <span>Multiplier</span>
+            <span id="statMultiplier">1.0×</span>
+        </div>
+
+        <div class="owner">
+            Owner got £1,63827382629103719+E27
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- SETTINGS -->
+<section id="settings" class="page">
+
+    <div class="card">
+
+        <h2>⚙️ Settings</h2>
+
+        <div class="setting-row">
+            <div>
+                <strong>🟢 Green Theme</strong>
+                <br>
+                <small>Button Simulator green theme</small>
+            </div>
+
+            <button id="themeButton" class="setting-btn">
+                ON
+            </button>
+        </div>
+
+
+        <div class="setting-row">
+            <div>
+                <strong>🔊 Click Sound</strong>
+                <br>
+                <small>Play a sound when clicking</small>
+            </div>
+
+            <button id="soundButton" class="setting-btn">
+                ON
+            </button>
+        </div>
+
+
+        <div class="setting-row">
+            <div>
+                <strong>⚠️ Reset Game</strong>
+                <br>
+                <small>Everything resets immediately</small>
+            </div>
+
+            <button id="resetButton" class="reset-btn">
+                RESET
+            </button>
+        </div>
+
+    </div>
+
+</section>
+
+</main>
+
+
+<!-- NAVIGATION -->
+<nav class="nav">
+
+    <button class="active" data-page="home">
+        🏠<br>Home
+    </button>
+
+    <button data-page="shop">
+        🛒<br>Shop
+    </button>
+
+    <button data-page="rebirth">
+        ♻️<br>Rebirth
+    </button>
+
+    <button data-page="stats">
+        📊<br>Stats
+    </button>
+
+    <button data-page="settings">
+        ⚙️<br>Settings
+    </button>
+
+</nav>
+
+<div id="toast" class="toast"></div>
+
+</div>
+
+
+<script>
+/* =========================
+   GAME STATE
+========================= */
+
+let money = 0;
+let totalEarned = 0;
+let clicks = 0;
+let perClick = 1;
+let highestBalance = 0;
+
+let upgradeLevel = 0;
+
+let rebirths = 0;
+let multiplier = 1.0;
+
+let soundEnabled = true;
+let greenTheme = true;
+
+
+/* =========================
+   UPGRADES
+========================= */
+
+const upgrades = [
+    {
+        name: "Double Click",
+        price: 50,
+        power: 5,
+        description: "+£5 per click"
+    },
+    {
+        name: "Mega Click",
+        price: 250,
+        power: 20,
+        description: "+£20 per click"
+    },
+    {
+        name: "Super Click",
+        price: 1000,
+        power: 75,
+        description: "+£75 per click"
+    },
+    {
+        name: "Ultra Click",
+        price: 5000,
+        power: 250,
+        description: "+£250 per click"
+    },
+    {
+        name: "Diamond Click",
+        price: 20000,
+        power: 1000,
+        description: "+£1,000 per click"
+    },
+    {
+        name: "Millionaire Click",
+        price: 100000,
+        power: 5000,
+        description: "+£5,000 per click"
+    },
+    {
+        name: "Billionaire Click",
+        price: 500000,
+        power: 25000,
+        description: "+£25,000 per click"
+    },
+    {
+        name: "Tycoon Click",
+        price: 2500000,
+        power: 125000,
+        description: "+£125,000 per click"
+    },
+    {
+        name: "Empire Click",
+        price: 10000000,
+        power: 750000,
+        description: "+£750,000 per click"
+    },
+    {
+        name: "God Click",
+        price: 100000000,
+        power: 5000000,
+        description: "+£5,000,000 per click"
+    }
+];
+
+
+/* =========================
+   ELEMENTS
+========================= */
+
+const moneyEl = document.getElementById("money");
+const perClickEl = document.getElementById("perClick");
+const clickButton = document.getElementById("clickButton");
+
+const upgradeList = document.getElementById("upgradeList");
+
+const rebirthCountEl = document.getElementById("rebirthCount");
+const multiplierEl = document.getElementById("multiplier");
+const rebirthRequirementEl = document.getElementById("rebirthRequirement");
+const rebirthButton = document.getElementById("rebirthButton");
+
+const totalEarnedEl = document.getElementById("totalEarned");
+const totalClicksEl = document.getElementById("totalClicks");
+const statMoneyEl = document.getElementById("statMoney");
+const statPerClickEl = document.getElementById("statPerClick");
+const highestBalanceEl = document.getElementById("highestBalance");
+const upgradesBoughtEl = document.getElementById("upgradesBought");
+const statRebirthsEl = document.getElementById("statRebirths");
+const statMultiplierEl = document.getElementById("statMultiplier");
+
+const toastEl = document.getElementById("toast");
+
+const themeButton = document.getElementById("themeButton");
+const soundButton = document.getElementById("soundButton");
+const resetButton = document.getElementById("resetButton");
+
+
+/* =========================
+   MONEY FORMAT
+========================= */
+
+function formatMoney(value) {
+    return "£" + Math.floor(value).toLocaleString("en-GB");
+}
+
+
+/* =========================
+   REBIRTH REQUIREMENT
+========================= */
+
+function getRebirthRequirement() {
+    return Math.floor(
+        10000 * Math.pow(100, rebirths)
+    );
+}
+
+
+/* =========================
+   TOAST
+========================= */
+
+let toastTimer;
+
+function showToast(message) {
+    toastEl.textContent = message;
+    toastEl.classList.add("show");
+
+    clearTimeout(toastTimer);
+
+    toastTimer = setTimeout(() => {
+        toastEl.classList.remove("show");
+    }, 1800);
+}
+
+
+/* =========================
+   SOUND
+========================= */
+
+let audioContext = null;
+let lastSoundTime = 0;
+
+function playClickSound() {
+
+    if (!soundEnabled) return;
+
+    const now = performance.now();
+
+    // Prevent thousands of sounds from firing at once
+    if (now - lastSoundTime < 35) return;
+
+    lastSoundTime = now;
+
+    try {
+
+        if (!audioContext) {
+            audioContext = new (
+                window.AudioContext ||
+                window.webkitAudioContext
+            )();
+        }
+
+        if (audioContext.state === "suspended") {
+            audioContext.resume();
+        }
+
+        const oscillator = audioContext.createOscillator();
+        const gain = audioContext.createGain();
+
+        oscillator.type = "square";
+        oscillator.frequency.value = 480;
+
+        gain.gain.setValueAtTime(
+            0.045,
+            audioContext.currentTime
+        );
+
+        gain.gain.exponentialRampToValueAtTime(
+            0.001,
+            audioContext.currentTime + 0.055
+        );
+
+        oscillator.connect(gain);
+        gain.connect(audioContext.destination);
+
+        oscillator.start();
+        oscillator.stop(
+            audioContext.currentTime + 0.055
+        );
+
+    } catch (error) {
+        // Sound unavailable — game still works
+    }
+}
+
+
+/* =========================
+   CLICK
+========================= */
+
+function doClick() {
+
+    const earned = perClick * multiplier;
+
+    money += earned;
+    totalEarned += earned;
+    clicks++;
+
+    if (money > highestBalance) {
+        highestBalance = money;
+    }
+
+    playClickSound();
+    updateUI();
+}
+
+
+/* =========================
+   PURCHASE UPGRADE
+========================= */
+
+function buyUpgrade(index) {
+
+    // Only the NEXT upgrade can be bought
+    if (index !== upgradeLevel) {
+        return;
+    }
+
+    const upgrade = upgrades[index];
+
+    if (money < upgrade.price) {
+        showToast(
+            "You need " +
+            formatMoney(upgrade.price - money) +
+            " more!"
+        );
+        return;
+    }
+
+    money -= upgrade.price;
+
+    perClick += upgrade.power;
+
+    upgradeLevel++;
+
+    showToast(
+        "✅ " + upgrade.name + " purchased!"
+    );
+
+    updateUI();
+}
+
+
+/* =========================
+   REBIRTH
+========================= */
+
+function rebirth() {
+
+    const requirement = getRebirthRequirement();
+
+    if (money < requirement) {
+        showToast(
+            "You need " +
+            formatMoney(requirement - money) +
+            " more!"
+        );
+        return;
+    }
+
+    // Reset progress
+    money = 0;
+    clicks = 0;
+    perClick = 1;
+    upgradeLevel = 0;
+
+    // Keep rebirth progress
+    rebirths++;
+
+    multiplier = 1.0 + (rebirths * 0.1);
+
+    showToast(
+        "♻️ Rebirth " +
+        rebirths +
+        "! Multiplier is now " +
+        multiplier.toFixed(1) +
+        "×"
+    );
+
+    updateUI();
+}
+
+
+/* =========================
+   RESET GAME
+========================= */
+
+function resetGame() {
+
+    const confirmed = confirm(
+        "Are you sure you want to reset the entire game?"
+    );
+
+    if (!confirmed) return;
+
+    money = 0;
+    totalEarned = 0;
+    clicks = 0;
+    perClick = 1;
+    highestBalance = 0;
+
+    upgradeLevel = 0;
+
+    rebirths = 0;
+    multiplier = 1.0;
+
+    showToast("🔄 Game reset!");
+
+    updateUI();
+}
+
+
+/* =========================
+   RENDER UPGRADES
+========================= */
+
+function renderUpgrades() {
+
+    upgradeList.innerHTML = "";
+
+    upgrades.forEach((upgrade, index) => {
+
+        const div = document.createElement("div");
+
+        div.className = "upgrade";
+
+        const info = document.createElement("div");
+        info.className = "upgrade-info";
+
+        const name = document.createElement("div");
+        name.className = "upgrade-name";
+
+        const desc = document.createElement("div");
+        desc.className = "upgrade-desc";
+
+        const button = document.createElement("button");
+        button.className = "buy";
+
+        name.textContent =
+            (index + 1) +
+            ". " +
+            upgrade.name;
+
+        desc.textContent =
+            upgrade.description +
+            " • Cost: " +
+            formatMoney(upgrade.price);
+
+        info.appendChild(name);
+        info.appendChild(desc);
+
+        if (index < upgradeLevel) {
+
+            button.textContent = "✓ BOUGHT";
+            button.disabled = true;
+            button.classList.add("purchased");
+
+        } else if (index > upgradeLevel) {
+
+            button.textContent = "🔒 LOCKED";
+            button.disabled = true;
+            button.classList.add("locked");
+
+        } else {
+
+            button.textContent =
+                "BUY " +
+                formatMoney(upgrade.price);
+
+            button.disabled =
+                money < upgrade.price;
+
+            button.onclick = () => buyUpgrade(index);
+        }
+
+        div.appendChild(info);
+        div.appendChild(button);
+
+        upgradeList.appendChild(div);
+    });
+}
+
+
+/* =========================
+   UPDATE UI
+========================= */
+
+function updateUI() {
+
+    moneyEl.textContent = formatMoney(money);
+    perClickEl.textContent = formatMoney(
+        perClick * multiplier
+    ).replace("£", "");
+
+    renderUpgrades();
+
+    rebirthCountEl.textContent = rebirths;
+
+    multiplierEl.textContent =
+        multiplier.toFixed(1) + "×";
+
+    statMultiplierEl.textContent =
+        multiplier.toFixed(1) + "×";
+
+    const requirement = getRebirthRequirement();
+
+    rebirthRequirementEl.textContent =
+        formatMoney(requirement);
+
+    rebirthButton.disabled =
+        money < requirement;
+
+    totalEarnedEl.textContent =
+        formatMoney(totalEarned);
+
+    totalClicksEl.textContent =
+        clicks.toLocaleString("en-GB");
+
+    statMoneyEl.textContent =
+        formatMoney(money);
+
+    statPerClickEl.textContent =
+        formatMoney(perClick * multiplier);
+
+    highestBalanceEl.textContent =
+        formatMoney(highestBalance);
+
+    upgradesBoughtEl.textContent =
+        upgradeLevel + " / " + upgrades.length;
+
+    statRebirthsEl.textContent =
+        rebirths.toLocaleString("en-GB");
+}
+
+
+/* =========================
+   NAVIGATION
+========================= */
+
+document.querySelectorAll(".nav button").forEach(button => {
+
+    button.addEventListener("click", () => {
+
+        const pageName =
+            button.dataset.page;
+
+        document.querySelectorAll(".page")
+            .forEach(page => {
+                page.classList.remove("active");
+            });
+
+        document.getElementById(pageName)
+            .classList.add("active");
+
+        document.querySelectorAll(".nav button")
+            .forEach(btn => {
+                btn.classList.remove("active");
+            });
+
+        button.classList.add("active");
+
+        document.querySelector("main").scrollTop = 0;
+    });
+
+});
+
+
+/* =========================
+   CLICK BUTTON
+========================= */
+
+clickButton.addEventListener(
+    "pointerdown",
+    event => {
+
+        event.preventDefault();
+
+        doClick();
+    }
+);
+
+
+/* =========================
+   REBIRTH BUTTON
+========================= */
+
+rebirthButton.addEventListener(
+    "click",
+    rebirth
+);
+
+
+/* =========================
+   SETTINGS
+========================= */
+
+themeButton.addEventListener(
+    "click",
+    () => {
+
+        greenTheme = !greenTheme;
+
+        themeButton.textContent =
+            greenTheme ? "ON" : "OFF";
+
+        if (greenTheme) {
+
+            document.documentElement.style.filter =
+                "none";
+
+        } else {
+
+            document.documentElement.style.filter =
+                "grayscale(0.7)";
+        }
+    }
+);
+
+
+soundButton.addEventListener(
+    "click",
+    () => {
+
+        soundEnabled = !soundEnabled;
+
+        soundButton.textContent =
+            soundEnabled ? "ON" : "OFF";
+
+        showToast(
+            soundEnabled
+                ? "🔊 Sound enabled"
+                : "🔇 Sound disabled"
+        );
+    }
+);
+
+
+resetButton.addEventListener(
+    "click",
+    resetGame
+);
+
+
+/* =========================
+   START GAME
+========================= */
+
+updateUI();
+
+</script>
+
+</body>
+</html>
